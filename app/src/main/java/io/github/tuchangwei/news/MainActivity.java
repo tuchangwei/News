@@ -26,16 +26,10 @@ public class MainActivity extends AppCompatActivity {
     public static final String URL = "http://www.imooc.com/api/teacher?type=4&num=30";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         listView = (ListView) findViewById(R.id.list_view);
-
-
-//        //测试数据
-//        List<NewsModel> list = new ArrayList<NewsModel>();
-//        list.add(new NewsModel("这是内容","这是标题","iconurl"));
-//        NewsAdapter newsAdapter = new NewsAdapter(this,list);
-//        listView.setAdapter(newsAdapter);
 
         new NewsAsyncTask().execute(URL);
     }

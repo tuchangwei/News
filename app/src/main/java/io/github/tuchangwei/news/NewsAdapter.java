@@ -61,7 +61,7 @@ public class NewsAdapter extends BaseAdapter {
         viewHolder.mContent.setText(mList.get(i).content);
         viewHolder.mTitle.setText(mList.get(i).title);
         viewHolder.mImage.setImageResource(R.mipmap.ic_launcher);
-
+        new ImageLoader(viewHolder.mImage,mList.get(i).url).loadImage();
         return view;
     }
 
