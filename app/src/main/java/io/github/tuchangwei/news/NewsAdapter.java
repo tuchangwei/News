@@ -4,26 +4,37 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.List;
 
+import io.github.tuchangwei.news.util.DebugLog;
+
 /**
  * Created by vale on 6/19/15.
  */
-public class NewsAdapter extends BaseAdapter {
+public class NewsAdapter extends BaseAdapter implements AbsListView.OnScrollListener{
 
 
     List<NewsModel> mList;
     LayoutInflater mInflater;
     ImageLoader mImageLoader;
-    public NewsAdapter(Context context, List<NewsModel> list) {
+    ListView mListView;
+    Boolean mFirstLoading = true;
+    int mStartLoadingItem;
+    int mEndLoadingItem;
+    public NewsAdapter(Context context, List<NewsModel> list,ListView listView) {
 
         mInflater = LayoutInflater.from(context);
         mList = list;
         mImageLoader = new ImageLoader();
+        mImageLoader.mListView = listView;
+        mListView = listView;
+        mListView.setOnScrollListener(this);
     }
 
     @Override
@@ -61,11 +72,56 @@ public class NewsAdapter extends BaseAdapter {
 
         viewHolder.mContent.setText(mList.get(i).content);
         viewHolder.mTitle.setText(mList.get(i).title);
-        viewHolder.mImage.setImageResource(R.mipmap.ic_launcher);
+
+        if (mImageLoader.getBitmap(mList.get(i).url) == null) {
+
+            viewHolder.mImage.setImageResource(R.mipmap.ic_launcher);
+        } else {
+
+            viewHolder.mImage.setImageBitmap(mImageLoader.getBitmap(mList.get(i).url));
+        }
+
         viewHolder.mImage.setTag(mList.get(i).url);
-        mImageLoader.imageView = viewHolder.mImage;
-        mImageLoader.loadImage();
+        //mImageLoader.imageView = viewHolder.mImage;
+        //mImageLoader.loadImage();
         return view;
+    }
+
+    public void loadImagesFromStartToEnd () {
+
+        mImageLoader.mList = mList;
+        mImageLoader.loadImageFrom(mStartLoadingItem, mEndLoadingItem);
+    }
+
+    @Override
+    public void onScrollStateChanged(AbsListView absListView, int i) {
+
+        DebugLog.d("" + i);
+        if (i == SCROLL_STATE_IDLE) {
+
+            loadImagesFromStartToEnd();
+
+        } else {
+
+            mImageLoader.cancelAllTasks();
+        }
+
+
+    }
+
+    @Override
+    public void onScroll(AbsListView absListView, int i, int i1, int i2) {
+
+        DebugLog.d(""+i+" "+i1+" "+i2);
+        mStartLoadingItem = i;
+        mEndLoadingItem = i+i1;
+
+        if (mFirstLoading==true&&i1>0) {
+
+            mFirstLoading = false;
+            loadImagesFromStartToEnd();
+
+        }
     }
 
     public class  ViewHolder {

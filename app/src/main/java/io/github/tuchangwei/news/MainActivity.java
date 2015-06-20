@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(List<NewsModel> newsModels) {
 
             super.onPostExecute(newsModels);
-            NewsAdapter newsAdapter = new NewsAdapter(MainActivity.this, newsModels);
+            NewsAdapter newsAdapter = new NewsAdapter(MainActivity.this, newsModels, listView);
             listView.setAdapter(newsAdapter);
         }
     }

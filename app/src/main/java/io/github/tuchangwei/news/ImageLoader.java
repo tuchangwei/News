@@ -5,20 +5,26 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.v4.util.LruCache;
 import android.widget.ImageView;
+import android.widget.ListView;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by vale on 6/19/15.
  */
 public class ImageLoader {
 
-    public ImageView imageView;
+
     private LruCache lruCache;
+    public List<NewsModel> mList;
+    public ListView mListView;
+    private List<ImageLoaderAsyncTask> mTasks = new ArrayList<ImageLoaderAsyncTask>();
 
     public ImageLoader() {
 
@@ -36,20 +42,33 @@ public class ImageLoader {
         return (Bitmap) lruCache.get(key);
     }
 
-    public void loadImage() {
+    public void loadImageFrom(int start, int end) {
 
-        String urlStr = (String) imageView.getTag();
-        Bitmap bitmap = getBitmap(urlStr);
-        if (bitmap != null) {
+        for (int i=start; i< end; i++) {
 
-            imageView.setImageBitmap(bitmap);
+            String urlStr = mList.get(i).url;
+            ImageView imageView = (ImageView) mListView.findViewWithTag(urlStr);
+            Bitmap bitmap = getBitmap(urlStr);
+            if (bitmap != null) {
 
-        } else {
+                imageView.setImageBitmap(bitmap);
 
-            new ImageLoaderAsyncTask(imageView).execute(urlStr);
+            } else {
+
+                ImageLoaderAsyncTask task = new ImageLoaderAsyncTask(imageView);
+                task.execute(urlStr);
+                mTasks.add(task);
+            }
         }
 
+    }
 
+    public  void cancelAllTasks() {
+
+        for (ImageLoaderAsyncTask task: mTasks) {
+            task.cancel(false);
+
+        }
     }
     public class ImageLoaderAsyncTask extends AsyncTask<String,Void,Bitmap> {
 
