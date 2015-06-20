@@ -3,6 +3,7 @@ package io.github.tuchangwei.news;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.support.v4.util.LruCache;
 import android.widget.ImageView;
 
 import java.io.IOException;
@@ -16,31 +17,56 @@ import java.net.URL;
  */
 public class ImageLoader {
 
-    private ImageView imageView;
-    private String urlStr;
+    public ImageView imageView;
+    private LruCache lruCache;
 
-    public ImageLoader(ImageView imageView, String urlStr) {
-        this.imageView = imageView;
-        this.urlStr = urlStr;
+    public ImageLoader() {
+
+        int maxSize = (int) Runtime.getRuntime().maxMemory()/4;
+        lruCache = new LruCache(maxSize);
+    }
+
+    public void setBitmapCache(String key, Bitmap bitmap) {
+
+        lruCache.put(key, bitmap);
+    }
+
+    public Bitmap getBitmap(String key) {
+
+        return (Bitmap) lruCache.get(key);
     }
 
     public void loadImage() {
 
-        new ImageLoaderAsyncTask().execute(urlStr);
+        String urlStr = (String) imageView.getTag();
+        Bitmap bitmap = getBitmap(urlStr);
+        if (bitmap != null) {
+
+            imageView.setImageBitmap(bitmap);
+
+        } else {
+
+            new ImageLoaderAsyncTask(imageView).execute(urlStr);
+        }
+
 
     }
-
-
     public class ImageLoaderAsyncTask extends AsyncTask<String,Void,Bitmap> {
 
+        ImageView mImageView;
+        String mUrlStr;
+        public ImageLoaderAsyncTask(ImageView mImageView) {
+
+            this.mImageView = mImageView;
+        }
 
         @Override
         protected Bitmap doInBackground(String... strings) {
 
-            String urlStr = strings[0];
+            mUrlStr = strings[0];
             Bitmap bitmap = null;
             try {
-                URL url1 = new URL(urlStr);
+                URL url1 = new URL(mUrlStr);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url1.openConnection();
                 InputStream inputStream = httpURLConnection.getInputStream();
                 bitmap = BitmapFactory.decodeStream(inputStream);
@@ -60,7 +86,18 @@ public class ImageLoader {
             super.onPostExecute(bitmap);
             if (bitmap != null) {
 
-                ImageLoader.this.imageView.setImageBitmap(bitmap);
+                String tag = (String) mImageView.getTag();
+
+                setBitmapCache(tag,bitmap);
+
+                if (tag.equals(mUrlStr)) {
+
+                    //这里是个异步加载，当图片加载完成后， ImageView可能已经滚到其他位置了。
+                    //这里是希望当前的ImageView加载当前的url图片
+                    mImageView.setImageBitmap(bitmap);
+
+                }
+
             }
         }
     }

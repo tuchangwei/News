@@ -18,11 +18,12 @@ public class NewsAdapter extends BaseAdapter {
 
     List<NewsModel> mList;
     LayoutInflater mInflater;
-
+    ImageLoader mImageLoader;
     public NewsAdapter(Context context, List<NewsModel> list) {
 
         mInflater = LayoutInflater.from(context);
         mList = list;
+        mImageLoader = new ImageLoader();
     }
 
     @Override
@@ -61,7 +62,9 @@ public class NewsAdapter extends BaseAdapter {
         viewHolder.mContent.setText(mList.get(i).content);
         viewHolder.mTitle.setText(mList.get(i).title);
         viewHolder.mImage.setImageResource(R.mipmap.ic_launcher);
-        new ImageLoader(viewHolder.mImage,mList.get(i).url).loadImage();
+        viewHolder.mImage.setTag(mList.get(i).url);
+        mImageLoader.imageView = viewHolder.mImage;
+        mImageLoader.loadImage();
         return view;
     }
 
